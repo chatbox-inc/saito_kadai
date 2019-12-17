@@ -21,7 +21,7 @@ class CreateSlackUsersTable extends Migration
             $table->boolean('is_owner');//管理者かどうかの判別
             $table->string('mode');//バイトで、8時間しか働けない者と、8時間以上働ける者を区別するため
 
-            $table->foreign('team_id')->references('team_id')->on('slack_teams');
+            $table->foreign('team_id')->references('team_id')->on('slack_teams')->onDelete('cascade');;
         });
 
         Schema::create('slack_teams', function (Blueprint $table) {
