@@ -14,11 +14,12 @@ class CreateSlackUsersTable extends Migration
     public function up()
     {
         Schema::create('slack_users', function (Blueprint $table) {
-            $table->string('id');
-            $table->string('team_id');
-            $table->string('name');
-            $table->boolean('is_owner');
-            $table->string('mode');
+            $table->bigIncrements('id');//tableの主キー
+            $table->string('slack_id');//slackのユーザーのid
+            $table->string('team_id');//チームのid
+            $table->string('name');//slackからとれる名前
+            $table->boolean('is_owner');//管理者かどうかの判別
+            $table->string('mode');//バイトで、8時間しか働けない者と、8時間以上働ける者を区別するため
         });
     }
 
