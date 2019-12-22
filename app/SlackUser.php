@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SlackUser extends Model
 {
+    protected $table = 'slack_users';
+
     public function works() {
         return $this->hasMany('App\Work');
     }
