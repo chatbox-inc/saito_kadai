@@ -19,6 +19,8 @@ class CreateWorksTable extends Migration
             $table->dateTime('start-time');//シフト勤務の開始時間
             $table->dateTime('end-time');//シフト勤務の終了時間
             $table->date('date');//シフトの日にちの取得
+            $table->timestamps();
+
             $table->foreign('user_id')->references('slack_id')
                   ->on('slack_users')->onDelete('cascade');//slackのユーザのidとこのテーブルを関連付けしている
         });
