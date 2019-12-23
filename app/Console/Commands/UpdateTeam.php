@@ -44,9 +44,6 @@ class UpdateTeam extends Command
         $response = $client->request("GET", "https://slack.com/api/team.info?token=".env('SLACK_TOKEN'));
         $responseBody = json_decode($response->getBody()->getContents(), true);
 
-        //取得できているかの確認
-        var_dump($responseBody['team']) ;
-
         //responseから、特定のデータの取得
         $team = $responseBody['team'];
         $id = $team['id'];

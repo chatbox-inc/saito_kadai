@@ -18,7 +18,7 @@ class TeamRepository
     //名前変更時に実行される。
     public function update($id, $name) {
         $query = new SlackTeam();
-        $query = $query->where('team_id', $id)
+        $query->where('team_id', $id)
             ->update(['team_name' => $name]);
     }
 }
