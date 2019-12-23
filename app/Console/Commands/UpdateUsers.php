@@ -2,25 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Repository\UserRepository;
+use GuzzleHttp\Client;
 use Illuminate\Console\Command;
-use \GuzzleHttp\Client;
 
-class FetchUsers extends Command
+class UpdateUsers extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'fetch:slackUsers';
+    protected $signature = 'update:slackUsers';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch user information from slack';
+    protected $description = 'Update user information from slack';
 
     /**
      * Create a new command instance.
@@ -39,15 +38,9 @@ class FetchUsers extends Command
      */
     public function handle()
     {
-
         //slackAppとのGET通信
         $client = new Client();
         $response = $client->request("GET", "https://slack.com/api/users.list?token=".env('SLACK_TOKEN'));
         $responseBody = json_decode($response->getBody()->getContents(), true);
-
-        //DBに保存
-        $repo = new UserRepository();
-        $repo->saveInfo($responseBody['members']);
-
     }
 }

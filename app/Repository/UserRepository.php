@@ -12,23 +12,35 @@ class UserRepository
     //追加と更新
     public function saveInfo($users) {
         foreach($users as $user) {
-            //新規
-            $query = new SlackUser();
-            $query->slack_id = $user['id'];
-            $query->team_id  = $user['team_id'];
-            $query->name     = $user['name'];
-            $query->is_owner = $user['is_owner'];
+            $query = new SlackUser();//インスタンス作成
+            $checker = $query->where('slack_id', $user['id']);//登録済みかの確認用変数
 
-            if($user['is_owner'] == false) {
+            if($checker->exists()) {
+                //更新
+                $checker->update(['name' => $user['name']]);
                 //TODO
-                //ここに8時間以上働く人かどうか判別する
-                //slack_idを用いて
-                $query->mode = 'バイト';
-            }else {
-                $query->mode = '管理者';
-            }
-            $query->save();
+                //ここで、バイト・熟練者・管理者の設定をすべきか
+                //slash commandで追加できるようにする方が楽
 
+            }else {
+                //新規追加
+                $query->slack_id = $user['id'];
+                $query->team_id  = $user['team_id'];
+                $query->name     = $user['name'];
+                $query->is_owner = $user['is_owner'];
+
+                //バイト、熟練者、管理者分ける
+                if($user['is_owner'] == false) {
+                    if($user['slack_id'] == 'USLACKBOT'){
+                        $query->mode = '熟練者';
+                    }else {
+                        $query->mode = 'バイト';
+                    }
+                }else {
+                    $query->mode = '管理者';
+                }
+                $query->save();
+            }
         }
 
     }
