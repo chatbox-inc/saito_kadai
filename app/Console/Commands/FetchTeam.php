@@ -45,12 +45,13 @@ class FetchTeam extends Command
         $responseBody = json_decode($response->getBody()->getContents(), true);
 
         //responseから、特定のデータの取得
-        $team = $responseBody['team'];
-        $id = $team['id'];
-        $name = $team['name'];
-
-        //DBに内容保存
-        $repo = new TeamRepository();
-        $repo->saveInfo($id, $name);
+        if(isset($responseBody['team'])) {
+            $team = $responseBody['team'];
+            $id = $team['id'];
+            $name = $team['name'];
+            //DBに内容保存
+            $repo = new TeamRepository();
+            $repo->saveInfo($id, $name);
+        }
     }
 }
