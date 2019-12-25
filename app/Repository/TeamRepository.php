@@ -9,16 +9,15 @@ class TeamRepository
 {
     //新しく追加するときのみ
     public function saveInfo($id, $name) {
-        $query = new SlackTeam();
-        $query->team_id = $id;
-        $query->team_name = $name;
-        $query->save();
-    }
+        $query = new SlackTeam();//インスタンス作成
+        $checker = $query->where('team_id', $id);//登録済みかの確認用変数
 
-    //名前変更時に実行される。
-    public function update($id, $name) {
-        $query = new SlackTeam();
-        $query->where('team_id', $id)
-            ->update(['team_name' => $name]);
+        if($checker->exists()) {
+            $checker->update(['team_name' => $name]);
+        }else {
+            $query->team_id = $id;
+            $query->team_name = $name;
+            $query->save();
+        }
     }
 }

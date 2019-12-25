@@ -29,16 +29,15 @@ class UserRepository
                 $query->name     = $user['name'];
                 $query->is_owner = $user['is_owner'];
 
-                //バイト、熟練者、管理者分ける
+                //TODO
+                //ここで、バイト・熟練者・管理者の設定をすべきか
+                //slash commandで追加できるようにする方が楽
                 if($user['is_owner'] == false) {
-                    if($user['slack_id'] == 'USLACKBOT'){
-                        $query->mode = '熟練者';
-                    }else {
-                        $query->mode = 'バイト';
-                    }
+                    $query->mode = 'バイト';
                 }else {
                     $query->mode = '管理者';
                 }
+
                 $query->save();
             }
         }
