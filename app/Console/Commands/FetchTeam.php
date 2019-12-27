@@ -44,6 +44,7 @@ class FetchTeam extends Command
         $response = $client->request("GET", "https://slack.com/api/team.info?token=".env('SLACK_TOKEN'));
         $responseBody = json_decode($response->getBody()->getContents(), true);
 
+        var_dump($responseBody);
         //responseから、特定のデータの取得
         if(isset($responseBody['team'])) {
             $team = $responseBody['team'];
