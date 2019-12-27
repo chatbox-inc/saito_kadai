@@ -13,12 +13,6 @@ class CreateSlackUsersTable extends Migration
      */
     public function up()
     {
-        Schema::create('slack_teams', function (Blueprint $table) {
-            $table->bigIncrements('id');//tableの主キー
-            $table->string('team_id')->unique();//slackのチームのid
-            $table->string('team_name');//チームの名前
-        });
-
         Schema::create('slack_users', function (Blueprint $table) {
             $table->bigIncrements('id');//tableの主キー
             $table->string('slack_id')->unique();;//slackのユーザーのid
@@ -26,6 +20,7 @@ class CreateSlackUsersTable extends Migration
             $table->string('name');//slackからとれる名前
             $table->boolean('is_owner');//管理者かどうかの判別
             $table->string('mode');//バイトで、8時間しか働けない者と、8時間以上働ける者を区別するため
+            $table->timestamps();
 
             $table->foreign('team_id')->references('team_id')->on('slack_teams')->onDelete('cascade');;
         });
@@ -39,6 +34,5 @@ class CreateSlackUsersTable extends Migration
     public function down()
     {
         Schema::dropIfExists('slack_users');
-        Schema::dropIfExists('slack_teams');
     }
 }
