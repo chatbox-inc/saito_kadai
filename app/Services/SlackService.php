@@ -2,7 +2,7 @@
 namespace App\Services;
 
 use Illuminate\Notifications\Notifiable;
-use App\Notifications\SlackNotification;
+use App\Notifications\SlackShukkin;
 
 class SlackService
 {
@@ -10,7 +10,7 @@ class SlackService
 
     public function send($message = null)
     {
-        $this->notify(new SlackNotification($message));
+        $this->notify(new SlackShukkin($message));
     }
 
     protected function routeNotificationForSlack($notifiable)

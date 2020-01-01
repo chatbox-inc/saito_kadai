@@ -13,7 +13,8 @@
         "guzzlehttp/guzzle": "^6.5",
         "laravel/framework": "^6.2",
         "laravel/slack-notification-channel": "^2.0",
-        "laravel/tinker": "^2.0"
+        "laravel/tinker": "^2.0",
+        "nesbot/carbon": "^2.28"
     },
     "require-dev": {
         "facade/ignition": "^1.4",

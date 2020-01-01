@@ -16,8 +16,8 @@ class CreateWorksTable extends Migration
         Schema::create('works', function (Blueprint $table) {
             $table->bigIncrements('id');//tableのid
             $table->string('user_id');//slack_userの情報
-            $table->dateTime('start-time');//シフト勤務の開始時間
-            $table->dateTime('end-time');//シフト勤務の終了時間
+            $table->dateTime('start_time');//シフト勤務の開始時間
+            $table->dateTime('end_time');//シフト勤務の終了時間
             $table->date('date');//シフトの日にちの取得
             $table->timestamps();
 

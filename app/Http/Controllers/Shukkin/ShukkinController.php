@@ -18,8 +18,9 @@ class ShukkinController extends Controller
 
     public function handle(Request $request) {
 
+        $message = $this->response->workTime($request);
         ///通知
-        $this->notification->send();
+        $this->notification->send($message);
     }
 
 }

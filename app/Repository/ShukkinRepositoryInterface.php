@@ -5,5 +5,5 @@ namespace App\Repository;
 
 interface ShukkinRepositoryInterface
 {
-    public function notification(Request $request);
+    public function workTime(Request $request);
 }
