@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Shukkin;
 
+use App\Http\Controllers\Controller;
 use App\Repository\ShukkinRepositoryInterface;
 use Illuminate\Http\Request;
 use App\Services\SlackService;

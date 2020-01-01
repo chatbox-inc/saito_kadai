@@ -27,16 +27,17 @@ class UserRepository
                 $query->slack_id = $user['id'];
                 $query->team_id  = $user['team_id'];
                 $query->name     = $user['name'];
-                $query->is_owner = $user['is_owner'];
-
+                //$query->is_owner = $user['is_owner'];
+                $query->is_owner = false;
+                $query->mode = 'バイト';
                 //TODO
                 //ここで、バイト・熟練者・管理者の設定をすべきか
                 //slash commandで追加できるようにする方が楽
-                if($user['is_owner'] == false) {
-                    $query->mode = 'バイト';
-                }else {
-                    $query->mode = '管理者';
-                }
+//                if($user['is_owner'] == false) {
+//                    $query->mode = 'バイト';
+//                }else {
+//                    $query->mode = '管理者';
+//                }
 
                 $query->save();
             }
