@@ -24,9 +24,14 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $user_id = $payload['user_id'];
 
         $work = new Work();
+        //人数の確認
+        $response=$this->checkNum($work, $date);
+        if($response['canWork']== 1) {
+            return $response;
+        }
         //働けるかの確認
         $response=$this->canWork($work, $user_id, $start_time, $end_time, $dt);
-        if( $response['canWork']== false) {
+        if($response['canWork']== 2) {
             return $response;
         }
         //シフト残り時間の報告
@@ -35,10 +40,23 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     }
 
 
+    public function checkNum($work, $date) {
+        //人数が５人以上ではないかどうか
+        $result = 3;
+        $num = $work->whereMonth('date', $date)->count();
+        if($num >=5) {
+            $result = 1;
+        }
+
+        $response = [
+            'canWork'   => $result,
+        ];
+        return $response;
+    }
 
     public function canWork($work, $user_id, $start_time, $end_time, $dt) {
         //働けるかどうか
-        $result = true;
+        $result = 3;
         //１か月のシフトデータ
         $workListM  = $work->whereMonth('date', $dt->month)->orwhere('user_id', $user_id)->get();
         $monthTime = 0;
@@ -57,13 +75,13 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             $dayTime = $endTime->diffInMinutes($startTime);
             $monthTime += $dayTime;
             if($monthTime+$shiftTime > $monthLimit) {//40時間
-                $result = false;
+                $result = 2;
             }
             //今週
             if($startTime->weekNumberInMonth == $weekNum) {
                 $weekTime += $dayTime;
                 if($weekTime+$shiftTime > $weekLimit) {//8時間
-                    $result = false;
+                    $result = 2;
                 }
 
             }
@@ -88,11 +106,16 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
     public function leftTime($work, $user_id, $start_time, $end_time, $date, $dt) {
         //DBに保存
-        $work->user_id      = $user_id;
-        $work->start_time   = $start_time;
-        $work->end_time     = $end_time;
-        $work->date         = $date;
-        $work->save();
+        $checker = $work->where('date', $date);
+        if($checker->exsists()) {
+            $checker->update(['start_time' => $start_time, 'end_time' => $end_time]);
+        }else {
+            $work->user_id      = $user_id;
+            $work->start_time   = $start_time;
+            $work->end_time     = $end_time;
+            $work->date         = $date;
+            $work->save();
+        }
 
         //１か月のシフト
         $workListM  = $work->whereMonth('date', $dt->month)->orwhere('user_id', $user_id)->get();
@@ -128,7 +151,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             'weekMin'   => $weekMin,
             'monthHour' => $monthHour,
             'monthMin'  => $monthMin,
-            'canWork'   => true,
+            'canWork'   => 3,
         ];
 
         return $response;
