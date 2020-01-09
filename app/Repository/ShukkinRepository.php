@@ -13,10 +13,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     public function workMessage($payload) {
         //TODO
         //正しい入力値しか受け取らないようにする。
+        //errorメッセージを吐く。
 
         //slashcommandsからのデータを取得
-        $dt   = Carbon::now();
-        $year = $dt->year;
+        $now   = Carbon::now();
+        $year = $now->year;
         $requestDate = explode(" ", $payload['text']);
         $date = Carbon::parse($year.$requestDate[0]);
         $start_time = Carbon::parse($year.$requestDate[0].$requestDate[1]);
@@ -24,30 +25,49 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $user_id = $payload['user_id'];
 
         $work = new Work();
-        //人数の確認
-        $response=$this->checkNum($work, $date);
-        if($response['canWork']== 1) {
+        //過去に登録しているかどうか
+        $response=$this->checkTime($date, $now);
+        if($response['status']== 0) {
             return $response;
         }
-        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
 
+        //人数の確認
+        $response=$this->checkNum($work, $date);
+        if($response['status']== 1) {
+            return $response;
+        }
+
+        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
         //時間訂正したい時に同じ日のコマンドを打つと
         //週の限界時間をように超えるため訂正できなくなるのを防ぐ
         if(!$checker->exists()) {
             //働けるかの確認
-            $response=$this->canWork($work, $user_id, $start_time, $end_time, $dt);
-            if($response['canWork']== 2) {
+            $response=$this->canWork($work, $user_id, $start_time, $end_time, $now);
+            if($response['status']== 2) {
                 return $response;
             }
         }
         //シフト残り時間の報告
-        $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $dt);
+        $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $now);
         return $response;
     }
 
 
-    ///////////////////////////////////////////////////////////////
-    ////////////////人数確認、時間制限確認、シフト登録//////////////////
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////日付け確認,人数確認、時間制限確認、シフト登録//////////////////
+    public function checkTime($date, $now) {
+        //申請された日付けが過去ではないか
+        $result = 3;
+        if($date <= $now) {
+            $result = 0;
+        }
+
+        $response = [
+            'status'   => $result,
+        ];
+        return $response;
+    }
+
     public function checkNum($work, $date) {
         //人数が５人以上ではないかどうか
         $result = 3;
@@ -57,16 +77,16 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         }
 
         $response = [
-            'canWork'   => $result,
+            'status'   => $result,
         ];
         return $response;
     }
 
-    public function canWork($work, $user_id, $start_time, $end_time, $dt) {
+    public function canWork($work, $user_id, $start_time, $end_time, $now) {
         //働けるかどうか
         $result = 3;
         //１か月のシフトデータ
-        $workListM  = $work->whereMonth('date', $dt->month)->orwhere('user_id', $user_id)->get();
+        $workListM  = $work->whereMonth('date', $now->month)->orwhere('user_id', $user_id)->get();
         $monthTime = 0;
         $weekTime = 0;
         $weekNum = new Carbon('now');
@@ -107,12 +127,12 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             'weekMin'   => $weekMin,
             'monthHour' => $monthHour,
             'monthMin'  => $monthMin,
-            'canWork'   => $result,
+            'status'   => $result,
         ];
         return $response;
     }
 
-    public function leftTime($work, $user_id, $start_time, $end_time, $date, $dt) {
+    public function leftTime($work, $user_id, $start_time, $end_time, $date, $now) {
         //DBに保存
         $checker = $work->where('date', $date);
         if($checker->exists()) {
@@ -126,7 +146,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         }
 
         //１か月のシフト
-        $workListM  = $work->whereMonth('date', $dt->month)->orwhere('user_id', $user_id)->get();
+        $workListM  = $work->whereMonth('date', $now->month)->orwhere('user_id', $user_id)->get();
         $monthTime = 0;
         $weekTime = 0;
         $weekNum = new Carbon('now');
@@ -159,7 +179,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             'weekMin'   => $weekMin,
             'monthHour' => $monthHour,
             'monthMin'  => $monthMin,
-            'canWork'   => 3,
+            'status'   => 3,
         ];
 
         return $response;

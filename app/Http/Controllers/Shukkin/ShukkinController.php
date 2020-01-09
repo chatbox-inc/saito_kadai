@@ -21,14 +21,17 @@ class ShukkinController extends Controller
         $payload = $request->all();
         $response = $this->response->workMessage($payload);
 
-        if($response['canWork'] == 1) {
-            $message = '人数が５人に達しています！代表に連絡してください';
+        if($response['status'] == 0) {
+            $message = '過去に登録はできません！';
         }
-        else if($response['canWork'] == 2) {
+        else if($response['status'] == 1) {
+            $message = '人数が５人に達しています！シフト登録できません！代表に連絡してください';
+        }
+        else if($response['status'] == 2) {
             $message = '申し込まれた時間では働けません!!'.'今週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'
                 .'今月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
-        else if($response['canWork'] == 3) {
+        else if($response['status'] == 3) {
             $message = '今週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'
                 .'今月の残り勤務時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
