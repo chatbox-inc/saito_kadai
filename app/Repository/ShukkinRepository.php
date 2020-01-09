@@ -29,10 +29,16 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         if($response['canWork']== 1) {
             return $response;
         }
-        //働けるかの確認
-        $response=$this->canWork($work, $user_id, $start_time, $end_time, $dt);
-        if($response['canWork']== 2) {
-            return $response;
+        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
+
+        //時間訂正したい時に同じ日のコマンドを打つと
+        //週の限界時間をように超えるため訂正できなくなるのを防ぐ
+        if(!$checker->exists()) {
+            //働けるかの確認
+            $response=$this->canWork($work, $user_id, $start_time, $end_time, $dt);
+            if($response['canWork']== 2) {
+                return $response;
+            }
         }
         //シフト残り時間の報告
         $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $dt);
@@ -40,6 +46,8 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     }
 
 
+    ///////////////////////////////////////////////////////////////
+    ////////////////人数確認、時間制限確認、シフト登録//////////////////
     public function checkNum($work, $date) {
         //人数が５人以上ではないかどうか
         $result = 3;
@@ -107,7 +115,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     public function leftTime($work, $user_id, $start_time, $end_time, $date, $dt) {
         //DBに保存
         $checker = $work->where('date', $date);
-        if($checker->exsists()) {
+        if($checker->exists()) {
             $checker->update(['start_time' => $start_time, 'end_time' => $end_time]);
         }else {
             $work->user_id      = $user_id;
