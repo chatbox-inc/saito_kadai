@@ -18,26 +18,20 @@ class UserRepository
             if($checker->exists()) {
                 //更新
                 $checker->update(['name' => $user['name']]);
-                //TODO
-                //ここで、バイト・熟練者・管理者の設定をすべきか
-                //slash commandで追加できるようにする方が楽
-
             }else {
                 //新規追加
                 $query->slack_id = $user['id'];
                 $query->team_id  = $user['team_id'];
                 $query->name     = $user['name'];
-                //$query->is_owner = $user['is_owner'];
+                $query->is_owner = array_get($user, 'is_admin', false);
                 $query->is_owner = false;
-                $query->mode = 'バイト';
-                //TODO
-                //ここで、バイト・熟練者・管理者の設定をすべきか
-                //slash commandで追加できるようにする方が楽
-//                if($user['is_owner'] == false) {
-//                    $query->mode = 'バイト';
-//                }else {
-//                    $query->mode = '管理者';
-//                }
+
+                //modeの設定
+                if($user['is_owner'] == false) {
+                    $query->mode = 'バイト';
+                }else {
+                    $query->mode = '管理者';
+                }
 
                 $query->save();
             }
