@@ -45,15 +45,10 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             return $response;
         }
 
-        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
-        //時間訂正したい時に同じ日のコマンドを打つと
-        //週の限界時間をように超えるため訂正できなくなるのを防ぐ
-        if(!$checker->exists()) {
-            //働けるかの確認
-            $response=$this->canWork($work, $user_id, $start_time, $end_time, $now);
-            if($response['status']== 2) {
-                return $response;
-            }
+        //働けるかの確認
+        $response=$this->canWork($work, $user_id, $start_time, $end_time, $now);
+        if($response['status']== 2) {
+            return $response;
         }
         //シフト残り時間の報告
         $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $now);
@@ -99,7 +94,9 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $weekTime = 0;
         $weekNum = new Carbon('now');
         $weekNum = $weekNum->weekNumberInMonth;//今週の番号
+
         $shiftTime = $end_time->diffInMinutes($start_time);
+        logger($shiftTime);
         $weekLimit = 8*60;
         $monthLimit = 8*60*5;
 
@@ -117,6 +114,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             if($startTime->weekNumberInMonth == $weekNum) {
                 $weekTime += $dayTime;
                 if($weekTime+$shiftTime > $weekLimit) {//8時間
+                    logger('通ったよ');
                     $result = 2;
                 }
 
