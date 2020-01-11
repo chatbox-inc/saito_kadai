@@ -5,6 +5,7 @@ namespace App\Repository;
 
 
 use App\SlackUser;
+use Illuminate\Support\Arr;
 
 class UserRepository
 {
@@ -23,11 +24,12 @@ class UserRepository
                 $query->slack_id = $user['id'];
                 $query->team_id  = $user['team_id'];
                 $query->name     = $user['name'];
-                $query->is_owner = array_get($user, 'is_admin', false);
-                $query->is_owner = false;
+                $owner           = Arr::get($user, 'is_owner', false);
+                if($owner == 1) $owner = true;
+                $query->is_owner = $owner;
 
                 //modeの設定
-                if($user['is_owner'] == false) {
+                if($owner == false) {
                     $query->mode = 'バイト';
                 }else {
                     $query->mode = '管理者';
