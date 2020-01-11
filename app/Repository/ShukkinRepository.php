@@ -5,24 +5,32 @@ namespace App\Repository;
 use App\Repository\ShukkinRepositoryInterface;
 use App\Work;
 use Carbon\Carbon;
+use Exception;
 
 
 
 class ShukkinRepository implements ShukkinRepositoryInterface
 {
     public function workMessage($payload) {
-        //TODO
-        //正しい入力値しか受け取らないようにする。
-        //errorメッセージを吐く。
 
         //slashcommandsからのデータを取得
         $now   = Carbon::now();
         $year = $now->year;
         $requestDate = explode(" ", $payload['text']);
-        $date = Carbon::parse($year.$requestDate[0]);
-        $start_time = Carbon::parse($year.$requestDate[0].$requestDate[1]);
-        $end_time = Carbon::parse($year.$requestDate[0].$requestDate[2]);
-        $user_id = $payload['user_id'];
+
+        //入力値が間違えていた時の判定
+        try {
+            $date = Carbon::parse($year.$requestDate[0]);
+            $start_time = Carbon::parse($year.$requestDate[0].$requestDate[1]);
+            $end_time = Carbon::parse($year.$requestDate[0].$requestDate[2]);
+            $user_id = $payload['user_id'];
+        } catch(Exception $e) {
+            $response = [
+                'status'   => -1,
+            ];
+
+            return $response;
+        }
 
         $work = new Work();
         //過去に登録しているかどうか

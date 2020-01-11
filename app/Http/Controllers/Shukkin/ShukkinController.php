@@ -21,7 +21,10 @@ class ShukkinController extends Controller
         $payload = $request->all();
         $response = $this->response->workMessage($payload);
 
-        if($response['status'] == 0) {
+        if($response['status'] == -1) {
+            $message = '正しい入力値ではありません！ex)のように入力してください！！！ex)/shukkin 0101 13:00 19:00';
+        }
+        else if($response['status'] == 0) {
             $message = '過去に登録はできません！';
         }
         else if($response['status'] == 1) {
