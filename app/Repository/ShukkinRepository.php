@@ -45,11 +45,28 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             return $response;
         }
 
-        //働けるかの確認
-        $response=$this->canWork($work, $user_id, $start_time, $end_time, $now);
-        if($response['status']== 2) {
+        //一日働ける時間の確認
+        //７時間までを前提にしている
+        $shiftTime = $end_time->diffInMinutes($start_time)/60;
+        if($shiftTime > 7) {
+            $response = [
+                'status'   => 4,
+            ];
+
             return $response;
         }
+
+        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
+        //時間訂正したい時に同じ日のコマンドを打つと
+        //週の限界時間をように超えるため訂正できなくなるのを防ぐ
+        if(!$checker->exists()) {
+            //働けるかの確認
+            $response = $this->canWork($work, $user_id, $shiftTime, $now);
+            if ($response['status'] == 2) {
+                return $response;
+            }
+        }
+
         //シフト残り時間の報告
         $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $now);
         return $response;
@@ -85,7 +102,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         return $response;
     }
 
-    public function canWork($work, $user_id, $start_time, $end_time, $now) {
+    public function canWork($work, $user_id, $shiftTime, $now) {
         //働けるかどうか
         $result = 3;
         //１か月のシフトデータ
@@ -95,7 +112,6 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         $weekNum = new Carbon('now');
         $weekNum = $weekNum->weekNumberInMonth;//今週の番号
 
-        $shiftTime = $end_time->diffInMinutes($start_time);
         logger($shiftTime);
         $weekLimit = 8*60;
         $monthLimit = 8*60*5;

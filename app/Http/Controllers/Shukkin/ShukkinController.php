@@ -38,6 +38,9 @@ class ShukkinController extends Controller
             $message = '今週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'
                 .'今月の残り勤務時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
+        else if($response['status'] == 4) {
+            $message = '1日に働ける時間は7時間です！';
+        }
 
         $this->notification->send($message);
      }
