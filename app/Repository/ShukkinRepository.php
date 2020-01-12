@@ -56,7 +56,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             return $response;
         }
 
-        $checker = $work->where('date', $date)->orwhere('user_id', $user_id);
+        $checker = $work->where('date', $date)->where('user_id', $user_id);
         //時間訂正したい時に同じ日のコマンドを打つと
         //週の限界時間をように超えるため訂正できなくなるのを防ぐ
         if(!$checker->exists()) {
@@ -106,13 +106,12 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         //働けるかどうか
         $result = 3;
         //１か月のシフトデータ
-        $workListM  = $work->whereMonth('date', $now->month)->orwhere('user_id', $user_id)->get();
+        $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
         $monthTime = 0;
         $weekTime = 0;
         $weekNum = new Carbon('now');
         $weekNum = $weekNum->weekNumberInMonth;//今週の番号
 
-        logger($shiftTime);
         $weekLimit = 8*60;
         $monthLimit = 8*60*5;
 
@@ -130,7 +129,6 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             if($startTime->weekNumberInMonth == $weekNum) {
                 $weekTime += $dayTime;
                 if($weekTime+$shiftTime > $weekLimit) {//8時間
-                    logger('通ったよ');
                     $result = 2;
                 }
 
@@ -156,8 +154,9 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
     public function leftTime($work, $user_id, $start_time, $end_time, $date, $now) {
         //DBに保存
-        $checker = $work->where('date', $date);
+        $checker = $work->where('user_id', $user_id)->where('date', $date);
         if($checker->exists()) {
+            logger('hello');
             $checker->update(['start_time' => $start_time, 'end_time' => $end_time]);
         }else {
             $work->user_id      = $user_id;
@@ -168,7 +167,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         }
 
         //１か月のシフト
-        $workListM  = $work->whereMonth('date', $now->month)->orwhere('user_id', $user_id)->get();
+        $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
         $monthTime = 0;
         $weekTime = 0;
         $weekNum = new Carbon('now');
