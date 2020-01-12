@@ -18,3 +18,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('/shukkin', Shukkin\ShukkinController::class.'@handle');
 Route::post('/update', Shukkin\UpdateWorkerController::class.'@handle');
+Route::post('/list', Shukkin\ListController::class.'@handle');
