@@ -12,10 +12,9 @@ class ListRepository implements ListRepositoryInterface
 {
     public function workList($payload)
     {
-        $owner = SlackUser::where('slack_id', $payload['user_id'])->first()->is_owner;
-
+        $owner = SlackUser::where('slack_id', $payload['user_id'])->first();
         //listコマンドを出したのが管理者かどうかの確認
-        if($owner) $response = $this->allList($payload);
+        if($owner->is_owner) $response = $this->allList($payload);
         else       $response = $this->myList($payload);
 
         return $response;
@@ -25,14 +24,9 @@ class ListRepository implements ListRepositoryInterface
     ///////////////////////////////////////////////
     ///////////管理者用、バイト用のデータ取得//////////
     public function allList($payload) {
-        //コマンドの解釈
-        //+が反映されない ex)+1 today
-//        $requestDate = explode(" ", $payload['text']);
-//        $calcSym = $requestDate['0'];
-//        $day     = $requestDate['1'];
-//
-//        $date   = new Carbon($calcSym.' '.$day);
-        $date = new Carbon($payload['text']);
+        $now   = Carbon::now();
+        $year = $now->year;
+        $date = Carbon::parse($year.$payload['text']);
         $shifts  = Work::where('date', $date)->get();
         $response = [];
 
@@ -68,7 +62,8 @@ class ListRepository implements ListRepositoryInterface
         //コマンド入力日の月と年と合致する
         //DBのシフトのデータの取得
         foreach($worksM as $work) {
-            $workDate = $work->date;
+            $workDate = new Carbon($work->date);
+
             if($workDate->month == $nowM && $workDate->year == $nowY) {
                 //carbon型に変更
                 $parseDate = new Carbon($workDate);
@@ -84,7 +79,6 @@ class ListRepository implements ListRepositoryInterface
             }
         }
 
-        logger($response);
         return $response;
     }
 }
