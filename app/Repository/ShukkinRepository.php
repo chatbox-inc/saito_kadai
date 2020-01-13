@@ -47,8 +47,8 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         //一日働ける時間の確認
         //７時間までを前提にしている
-        $shiftTime = $end_time->diffInMinutes($start_time)/60;
-        if($shiftTime > 7) {
+        $shiftTime = $end_time->diffInMinutes($start_time);
+        if($shiftTime > 7*60) {
             $response = [
                 'status'   => 4,
             ];
@@ -91,7 +91,8 @@ class ShukkinRepository implements ShukkinRepositoryInterface
     public function checkNum($work, $date) {
         //人数が５人以上ではないかどうか
         $result = 3;
-        $num = $work->whereMonth('date', $date)->count();
+        $num = $work->where('date', $date)->count();
+
         if($num >=5) {
             $result = 1;
         }
@@ -156,7 +157,6 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         //DBに保存
         $checker = $work->where('user_id', $user_id)->where('date', $date);
         if($checker->exists()) {
-            logger('hello');
             $checker->update(['start_time' => $start_time, 'end_time' => $end_time]);
         }else {
             $work->user_id      = $user_id;
