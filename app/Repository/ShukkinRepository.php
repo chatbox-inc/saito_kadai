@@ -66,6 +66,11 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             if ($response['status'] == 2) {
                 return $response;
             }
+        }else {
+            $response = $this->canUpdate($work, $user_id, $shiftTime, $now, $submitWeek, $date);
+            if ($response['status'] == 2) {
+                return $response;
+            }
         }
 
         //シフト残り時間の報告
@@ -126,9 +131,67 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         if($weekTime[$submitWeek]+$shiftTime > $weekLimit) {//8時間
             $result = 2;
         }
+        //今月の確認
+        if(array_sum($weekTime)+$shiftTime > $monthLimit) {
+            $result = 2;
+        }
 
         $weekTimeN = $weekTime[$submitWeek];
         $monthTime = array_sum($weekTime);
+
+        $weekLeftTime = $weekLimit - $weekTimeN;
+        $monthLeftTime = $monthLimit - $monthTime;
+        $weekHour  = $weekLeftTime / 60;
+        $weekMin   = $weekLeftTime % 60;
+        $monthHour = $monthLeftTime / 60;
+        $monthMin  = $monthLeftTime % 60;
+
+        $response = [
+            'weekHour'  => $weekHour,
+            'weekMin'   => $weekMin,
+            'monthHour' => $monthHour,
+            'monthMin'  => $monthMin,
+            'status'   =>  $result,
+        ];
+        return $response;
+    }
+
+    public function canUpdate($work, $user_id, $shiftTime, $now, $submitWeek, $date) {
+        //働けるかどうか
+        $result = 3;
+        //１か月のシフトデータ
+        $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
+
+        $weekLimit = 8*60;
+        $monthLimit = 8*60*5;
+        $subTime = 0;
+
+        $weekTime = array(0, 0, 0, 0, 0);
+        //各週のデータを取得する
+        foreach($workListM as $workM) {
+            $endTime = new Carbon($workM->end_time);
+            $startTime = new Carbon($workM->start_time);
+            if($date->toDateString() == $workM->date) {
+                $dayTime = $shiftTime;
+                $subTime = $shiftTime - $endTime->diffInMinutes($startTime);
+            }else {
+                $dayTime = $endTime->diffInMinutes($startTime);
+            }
+            $weekTime[$startTime->weekNumberInMonth-1]  += $dayTime;
+        }
+
+        //シフト提出週の確認
+        if($weekTime[$submitWeek] > $weekLimit) {
+            $weekTime[$submitWeek] -= $subTime;
+            $result = 2;
+        }
+        //今月の確認
+        if(array_sum($weekTime) > $monthLimit) {
+            $result = 2;
+        }
+
+        $weekTimeN = $weekTime[$submitWeek];
+        $monthTime = array_sum($weekTime)-$subTime;
 
         $weekLeftTime = $weekLimit - $weekTimeN;
         $monthLeftTime = $monthLimit - $monthTime;
