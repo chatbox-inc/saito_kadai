@@ -32,7 +32,7 @@ class ShukkinController extends Controller
         }
         else if($response['status'] == 2) {
             $message = '申し込まれた時間では働けません!!'."\n".
-                '今週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
+                '申し込まれた週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
                 '今月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
         else if($response['status'] == 3) {

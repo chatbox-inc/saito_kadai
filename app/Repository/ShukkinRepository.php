@@ -22,7 +22,8 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         try {
             $date = Carbon::parse($year.$requestDate[0]);
             $start_time = Carbon::parse($year.$requestDate[0].$requestDate[1]);
-            $end_time = Carbon::parse($year.$requestDate[0].$requestDate[2]);
+            $end_time   = Carbon::parse($year.$requestDate[0].$requestDate[2]);
+            $submitWeek = $start_time->weekNumberInMonth-1;
             $user_id = $payload['user_id'];
         } catch(Exception $e) {
             $response = [
@@ -61,7 +62,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         //週の限界時間をように超えるため訂正できなくなるのを防ぐ
         if(!$checker->exists()) {
             //働けるかの確認
-            $response = $this->canWork($work, $user_id, $shiftTime, $now);
+            $response = $this->canWork($work, $user_id, $shiftTime, $now, $submitWeek);
             if ($response['status'] == 2) {
                 return $response;
             }
@@ -103,40 +104,33 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         return $response;
     }
 
-    public function canWork($work, $user_id, $shiftTime, $now) {
+    public function canWork($work, $user_id, $shiftTime, $now, $submitWeek) {
         //働けるかどうか
         $result = 3;
         //１か月のシフトデータ
         $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
-        $monthTime = 0;
-        $weekTime = 0;
-        $weekNum = new Carbon('now');
-        $weekNum = $weekNum->weekNumberInMonth;//今週の番号
 
         $weekLimit = 8*60;
         $monthLimit = 8*60*5;
 
-        //今月の一ヶ月間取得するように
+        $weekTime = array(0, 0, 0, 0, 0);
+        //各週のデータを取得する
         foreach($workListM as $workM) {
-            //一ヶ月
             $endTime = new Carbon($workM->end_time);
             $startTime = new Carbon($workM->start_time);
             $dayTime = $endTime->diffInMinutes($startTime);
-            $monthTime += $dayTime;
-            if($monthTime+$shiftTime > $monthLimit) {//40時間
-                $result = 2;
-            }
-            //今週
-            if($startTime->weekNumberInMonth == $weekNum) {
-                $weekTime += $dayTime;
-                if($weekTime+$shiftTime > $weekLimit) {//8時間
-                    $result = 2;
-                }
-
-            }
+            $weekTime[$startTime->weekNumberInMonth-1]  += $dayTime;
         }
 
-        $weekLeftTime = $weekLimit - $weekTime;
+        //シフト提出週の確認
+        if($weekTime[$submitWeek]+$shiftTime > $weekLimit) {//8時間
+            $result = 2;
+        }
+
+        $weekTimeN = $weekTime[$submitWeek];
+        $monthTime = array_sum($weekTime);
+
+        $weekLeftTime = $weekLimit - $weekTimeN;
         $monthLeftTime = $monthLimit - $monthTime;
         $weekHour  = $weekLeftTime / 60;
         $weekMin   = $weekLeftTime % 60;
@@ -148,7 +142,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             'weekMin'   => $weekMin,
             'monthHour' => $monthHour,
             'monthMin'  => $monthMin,
-            'status'   => $result,
+            'status'   =>  $result,
         ];
         return $response;
     }
@@ -168,27 +162,24 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         //１か月のシフト
         $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
-        $monthTime = 0;
-        $weekTime = 0;
         $weekNum = new Carbon('now');
         $weekNum = $weekNum->weekNumberInMonth;//今週の番号
         $weekLimit = 8*60;
         $monthLimit = 8*60*5;
 
-        //今月の一ヶ月間取得するように
+        $weekTime = array(0, 0, 0, 0, 0);
+        //各週のデータを取得する
         foreach($workListM as $workM) {
-            //一ヶ月
             $endTime = new Carbon($workM->end_time);
             $startTime = new Carbon($workM->start_time);
             $dayTime = $endTime->diffInMinutes($startTime);
-            $monthTime += $dayTime;
-            //今週
-            if($startTime->weekNumberInMonth == $weekNum) {
-                $weekTime += $dayTime;
-            }
+            $weekTime[$startTime->weekNumberInMonth-1]  += $dayTime;
         }
 
-        $weekLeftTime = $weekLimit - $weekTime;
+        $weekTimeN = $weekTime[$weekNum-1];
+        $monthTime = array_sum($weekTime);
+
+        $weekLeftTime = $weekLimit - $weekTimeN;
         $monthLeftTime = $monthLimit - $monthTime;
         $weekHour  = $weekLeftTime / 60;
         $weekMin   = $weekLeftTime % 60;
