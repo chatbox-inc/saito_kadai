@@ -3,6 +3,7 @@
 
 namespace App\Repository;
 use App\Repository\ShukkinRepositoryInterface;
+use App\SlackUser;
 use App\Work;
 use Carbon\Carbon;
 use Exception;
@@ -57,25 +58,32 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             return $response;
         }
 
-        $checker = $work->where('date', $date)->where('user_id', $user_id);
-        //時間訂正したい時に同じ日のコマンドを打つと
-        //週の限界時間をように超えるため訂正できなくなるのを防ぐ
-        if(!$checker->exists()) {
-            //働けるかの確認
-            $response = $this->canWork($work, $user_id, $shiftTime, $now, $submitWeek);
-            if ($response['status'] == 2) {
-                return $response;
+        $user = SlackUser::where('slack_id', $user_id)->first();
+        if($user->mode == 'バイト') {
+            $checker = $work->where('date', $date)->where('user_id', $user_id);
+            //時間訂正したい時に同じ日のコマンドを打つと
+            //週の限界時間をように超えるため訂正できなくなるのを防ぐ
+            if(!$checker->exists()) {
+                //働けるかの確認
+                $response = $this->canWork($work, $user_id, $shiftTime, $now, $submitWeek);
+                if ($response['status'] == 2) {
+                    return $response;
+                }
+            }else {
+                $response = $this->canUpdate($work, $user_id, $shiftTime, $now, $submitWeek, $date);
+                if ($response['status'] == 2) {
+                    return $response;
+                }
             }
-        }else {
-            $response = $this->canUpdate($work, $user_id, $shiftTime, $now, $submitWeek, $date);
-            if ($response['status'] == 2) {
-                return $response;
-            }
-        }
 
-        //シフト残り時間の報告
-        $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $now);
-        return $response;
+            //シフト残り時間の報告
+            $response = $this->leftTime($work, $user_id, $start_time, $end_time, $date, $now);
+            return $response;
+        }else {
+            //どのくらいシフト入ったか
+            $response = $this->expertShift($work, $user_id, $start_time, $end_time, $date, $now);
+            return $response;
+        }
     }
 
 
@@ -191,7 +199,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
         }
 
         $weekTimeN = $weekTime[$submitWeek];
-        $monthTime = array_sum($weekTime)-$subTime;
+        $monthTime = array_sum($weekTime);
 
         $weekLeftTime = $weekLimit - $weekTimeN;
         $monthLeftTime = $monthLimit - $monthTime;
@@ -255,6 +263,47 @@ class ShukkinRepository implements ShukkinRepositoryInterface
             'monthHour' => $monthHour,
             'monthMin'  => $monthMin,
             'status'   => 3,
+        ];
+
+        return $response;
+
+    }
+
+    public function expertShift($work, $user_id, $start_time, $end_time, $date, $now) {
+        //DBに保存
+        $checker = $work->where('user_id', $user_id)->where('date', $date);
+        if($checker->exists()) {
+            $checker->update(['start_time' => $start_time, 'end_time' => $end_time]);
+        }else {
+            $work->user_id      = $user_id;
+            $work->start_time   = $start_time;
+            $work->end_time     = $end_time;
+            $work->date         = $date;
+            $work->save();
+        }
+
+        //１か月のシフト
+        $workListM  = $work->whereMonth('date', $now->month)->where('user_id', $user_id)->get();
+        $weekNum = new Carbon('now');
+
+        $weekTime = array(0, 0, 0, 0, 0);
+        //各週のデータを取得する
+        foreach($workListM as $workM) {
+            $endTime = new Carbon($workM->end_time);
+            $startTime = new Carbon($workM->start_time);
+            $dayTime = $endTime->diffInMinutes($startTime);
+            $weekTime[$startTime->weekNumberInMonth-1]  += $dayTime;
+        }
+
+        $monthTime = array_sum($weekTime);
+
+        $monthHour = $monthTime / 60;
+        $monthMin  = $monthTime % 60;
+
+        $response = [
+            'monthHour' => $monthHour,
+            'monthMin'  => $monthMin,
+            'status'   => 5,
         ];
 
         return $response;
