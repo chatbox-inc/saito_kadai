@@ -32,18 +32,18 @@ class ShukkinController extends Controller
         }
         else if($response['status'] == 2) {
             $message = '申し込まれた時間では働けません!!'."\n".
-                '申し込まれた週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
-                '今月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
+                $response['submitMonth'].'月の'.$response['submitWeek'].'週目の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
+                $response['submitMonth'].'月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
         else if($response['status'] == 3) {
-            $message = '今週の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
-                '今月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
+            $message = $response['submitMonth'].'月の'.$response['submitWeek'].'週目の残り勤務可能時間は'.$response['weekHour'].'時間'.$response['weekMin'].'分です。'."\n".
+                $response['submitMonth'].'月の残り勤務可能時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分です。';
         }
         else if($response['status'] == 4) {
             $message = '1日に働ける時間は7時間です！';
         }
         else if($response['status'] == 5) {
-            $message = '今月の勤務時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分になっています。';
+            $message = $response['submitMonth'].'月の勤務時間は'.$response['monthHour'].'時間'.$response['monthMin'].'分になっています。';
         }
 
         $this->notification->send($message);
