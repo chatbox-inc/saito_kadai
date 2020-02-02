@@ -5,6 +5,7 @@ namespace App\Repository;
 
 
 use App\SlackUser;
+use Illuminate\Support\Arr;
 
 class UserRepository
 {
@@ -18,21 +19,17 @@ class UserRepository
             if($checker->exists()) {
                 //更新
                 $checker->update(['name' => $user['name']]);
-                //TODO
-                //ここで、バイト・熟練者・管理者の設定をすべきか
-                //slash commandで追加できるようにする方が楽
-
             }else {
                 //新規追加
                 $query->slack_id = $user['id'];
                 $query->team_id  = $user['team_id'];
                 $query->name     = $user['name'];
-                $query->is_owner = $user['is_owner'];
+                $owner           = Arr::get($user, 'is_owner', false);
+                if($owner == 1) $owner = true;
+                $query->is_owner = $owner;
 
-                //TODO
-                //ここで、バイト・熟練者・管理者の設定をすべきか
-                //slash commandで追加できるようにする方が楽
-                if($user['is_owner'] == false) {
+                //modeの設定
+                if($owner == false) {
                     $query->mode = 'バイト';
                 }else {
                     $query->mode = '管理者';
