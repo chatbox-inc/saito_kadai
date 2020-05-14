@@ -155,9 +155,9 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         $weekLeftTime = $weekLimitTime - $weekTimeN;
         $monthLeftTime = $monthLimitTime- $monthTime;
-        $weekHour  = $weekLeftTime / 60;
+        $weekHour  = floor($weekLeftTime / 60);
         $weekMin   = $weekLeftTime % 60;
-        $monthHour = $monthLeftTime / 60;
+        $monthHour = floor($monthLeftTime / 60);
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
@@ -214,9 +214,9 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         $weekLeftTime = $weekLimitTime - $weekTimeN;
         $monthLeftTime = $monthLimitTime- $monthTime;
-        $weekHour  = $weekLeftTime / 60;
+        $weekHour  = floor($weekLeftTime / 60);
         $weekMin   = $weekLeftTime % 60;
-        $monthHour = $monthLeftTime / 60;
+        $monthHour = floor($monthLeftTime / 60);
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
@@ -264,9 +264,9 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         $weekLeftTime = $weekLimitTime - $weekTimeN;
         $monthLeftTime = $monthLimitTime- $monthTime;
-        $weekHour  = $weekLeftTime / 60;
+        $weekHour  = floor($weekLeftTime / 60);
         $weekMin   = $weekLeftTime % 60;
-        $monthHour = $monthLeftTime / 60;
+        $monthHour = floor($monthLeftTime / 60);
         $monthMin  = $monthLeftTime % 60;
 
         $response = [
@@ -311,7 +311,7 @@ class ShukkinRepository implements ShukkinRepositoryInterface
 
         $monthTime = array_sum($weekTime);
 
-        $monthHour = $monthTime / 60;
+        $monthHour = floor($monthTime / 60);
         $monthMin  = $monthTime % 60;
 
         $response = [
